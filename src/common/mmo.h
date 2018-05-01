@@ -68,7 +68,7 @@
 #endif // PACKETVER
 
 //Uncomment the following line if your client is ragexeRE instead of ragexe (required because of conflicting packets in ragexe vs ragexeRE).
-//#define ENABLE_PACKETVER_RE
+#define ENABLE_PACKETVER_RE
 #ifdef ENABLE_PACKETVER_RE
 	#define PACKETVER_RE
 	#undef ENABLE_PACKETVER_RE
