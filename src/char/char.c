@@ -151,6 +151,7 @@ struct start_item_s {
 	bool stackable;
 };
 VECTOR_DECL(struct start_item_s) start_items;
+VECTOR_DECL(struct start_item_s) start_items_doram;
 
 int guild_exp_rate = 100;
 
@@ -167,6 +168,7 @@ struct fame_list taekwon_fame_list[MAX_FAME_LIST];
 // Initial position (it's possible to set it in conf file)
 #ifdef RENEWAL
 	struct point start_point = { 0, 97, 90 };
+	struct point start_point_doram = { 0, 48, 297 };
 #else
 	struct point start_point = { 0, 53, 111 };
 #endif
@@ -1682,21 +1684,42 @@ int char_make_new_char_sql(struct char_session_data *sd, const char *name_, int 
 	}
 
 	//Give the char the default items
-	for (i = 0; i < VECTOR_LENGTH(start_items); i++) {
-		struct start_item_s *item = &VECTOR_INDEX(start_items, i);
-		if (item->stackable) {
-			if (SQL_ERROR == SQL->Query(inter->sql_handle,
-			                            "INSERT INTO `%s` (`char_id`,`nameid`, `amount`, `identify`) VALUES ('%d', '%d', '%d', '%d')",
-			                            inventory_db, char_id, item->id, item->amount, 1))
-				Sql_ShowDebug(inter->sql_handle);
-		} else {
-			// Non-stackable items should have their own entries (issue: 7279)
-			int l, loc = item->loc;
-			for (l = 0; l < item->amount; l++) {
+	if (starting_class == JOB_NOVICE) {
+		for (i = 0; i < VECTOR_LENGTH(start_items); i++) {
+			struct start_item_s *item = &VECTOR_INDEX(start_items, i);
+			if (item->stackable) {
 				if (SQL_ERROR == SQL->Query(inter->sql_handle,
-				                            "INSERT INTO `%s` (`char_id`,`nameid`, `amount`, `equip`, `identify`) VALUES ('%d', '%d', '%d', '%d', '%d')",
-				                            inventory_db, char_id, item->id, 1, loc, 1))
+				                            "INSERT INTO `%s` (`char_id`,`nameid`, `amount`, `identify`) VALUES ('%d', '%d', '%d', '%d')",
+				                            inventory_db, char_id, item->id, item->amount, 1))
 					Sql_ShowDebug(inter->sql_handle);
+			} else {
+				// Non-stackable items should have their own entries (issue: 7279)
+				int l, loc = item->loc;
+				for (l = 0; l < item->amount; l++) {
+					if (SQL_ERROR == SQL->Query(inter->sql_handle,
+					                            "INSERT INTO `%s` (`char_id`,`nameid`, `amount`, `equip`, `identify`) VALUES ('%d', '%d', '%d', '%d', '%d')",
+					                            inventory_db, char_id, item->id, 1, loc, 1))
+						Sql_ShowDebug(inter->sql_handle);
+				}
+			}
+		}
+	} else {
+		for (i = 0; i < VECTOR_LENGTH(start_items_doram); i++) {
+			struct start_item_s *item = &VECTOR_INDEX(start_items_doram, i);
+			if (item->stackable) {
+				if (SQL_ERROR == SQL->Query(inter->sql_handle,
+				                            "INSERT INTO `%s` (`char_id`,`nameid`, `amount`, `identify`) VALUES ('%d', '%d', '%d', '%d')",
+				                            inventory_db, char_id, item->id, item->amount, 1))
+					Sql_ShowDebug(inter->sql_handle);
+			} else {
+				// Non-stackable items should have their own entries (issue: 7279)
+				int l, loc = item->loc;
+				for (l = 0; l < item->amount; l++) {
+					if (SQL_ERROR == SQL->Query(inter->sql_handle,
+					                            "INSERT INTO `%s` (`char_id`,`nameid`, `amount`, `equip`, `identify`) VALUES ('%d', '%d', '%d', '%d', '%d')",
+					                            inventory_db, char_id, item->id, 1, loc, 1))
+						Sql_ShowDebug(inter->sql_handle);
+				}
 			}
 		}
 	}
